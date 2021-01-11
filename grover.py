@@ -169,7 +169,8 @@ def grover(qc, answer, bits):
     r = math.floor(np.pi * math.sqrt(2 ** len(bits)) / 4)
     print(str(r) + " iterations made")
     for i in range(r):
-        qc.append(oracle(answer), bits)
+        for an in answer:
+            qc.append(oracle(an), bits)
         qc.append(diffuser(len(bits)), bits)
     return qc
 
@@ -177,10 +178,10 @@ if __name__ == '__main__':
 
     authentication = get_authentication()
     QI.set_authentication(authentication, QI_URL)
-    qi_backend = QI.get_backend('Starmon-5')
-    # qi_backend = QI.get_backend('QX single-node simulator')
+    # qi_backend = QI.get_backend('Starmon-5')
+    qi_backend = QI.get_backend('QX single-node simulator')
 
-    q_num = 5
+    q_num = 10
     bits = all_bits(q_num)
 
     q = QuantumRegister(q_num)
@@ -189,7 +190,7 @@ if __name__ == '__main__':
 
     circuit = initialize_s(circuit, bits)
 
-    circuit = grover(circuit, [True, True, True, True, True], bits)
+    circuit = grover(circuit, [[True, True, True, False, True, True, True, False, True, True]], bits)
 
     circuit.measure(q, b)
 
