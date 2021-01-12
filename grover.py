@@ -166,13 +166,20 @@ def plot_results(probabilities_histogram, size):
 
 
 def grover(qc, answer, bits):
-    r = math.floor(np.pi * math.sqrt(2 ** len(bits)) / 4)
+    r = math.floor(np.pi / 4 * math.sqrt((2 ** len(bits)) / len(answer)))
+    if r == 0:
+        r = 1
     print(str(r) + " iterations made")
     for i in range(r):
         for an in answer:
             qc.append(oracle(an), bits)
         qc.append(diffuser(len(bits)), bits)
     return qc
+
+# def answer_generator(n_bits, num_answers):
+#     arr = []
+#     for x in range(num_answers):
+#         arr.append()
 
 if __name__ == '__main__':
 
@@ -181,7 +188,7 @@ if __name__ == '__main__':
     # qi_backend = QI.get_backend('Starmon-5')
     qi_backend = QI.get_backend('QX single-node simulator')
 
-    q_num = 10
+    q_num = 5
     bits = all_bits(q_num)
 
     q = QuantumRegister(q_num)
@@ -190,7 +197,7 @@ if __name__ == '__main__':
 
     circuit = initialize_s(circuit, bits)
 
-    circuit = grover(circuit, [[True, True, True, False, True, True, True, False, True, True]], bits)
+    circuit = grover(circuit, [[True, True, True, True, True], [True, True, False, True, True], [True, False, True, True, True], [True, False, False, True, True], [False, True, False, True, True], [False, False, True, True, True], [False, False, True, False, True], [False, False, False, False, True]], bits)
 
     circuit.measure(q, b)
 
@@ -200,3 +207,4 @@ if __name__ == '__main__':
     qi_result = qi_job.result()
     probabilities_histogram = qi_result.get_probabilities(circuit)
     plot_results(probabilities_histogram, [120, 20])
+
