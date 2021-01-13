@@ -188,7 +188,7 @@ if __name__ == '__main__':
     qi_backend = QI.get_backend('Starmon-5')
     # qi_backend = QI.get_backend('QX single-node simulator')
 
-    q_num = 3
+    q_num = 5
     bits = all_bits(q_num)
 
     q = QuantumRegister(q_num)
@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     circuit = initialize_s(circuit, bits)
 
-    circuit = grover(circuit, [[True, True, True]], bits)
+    circuit = grover(circuit, [[False, False, False, False, False]], bits)
 
     circuit.measure(q, b)
 

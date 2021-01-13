@@ -1,4 +1,5 @@
 import os
+import math
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, execute
 from numpy import pi
 from quantuminspire.qiskit import QI
@@ -35,17 +36,63 @@ def alt_grover(circuit, search=0):
 
     return circuit
 
+def alt_grover_n(circuit, answer):
+    num = len(answer)
+
+    # Calculating itteration number
+    # r = math.floor(pi / 4 * math.sqrt(2 ** len(answer)))
+    # if r == 0:
+    #     r = 1
+    # print(str(r) + " iterations made")
+    # i is one because dono what to itterate
+    r = 1
+
+    zero = []
+    one = []
+    for i, val in enumerate(answer):
+        if val:
+            one.append(i)
+        else:
+            zero.append(i)
+
+
+
+    for i in range(r):
+        # initialisation
+        for x in range(num):
+            circuit.ry(pi, q[x])
+
+        # oracles
+        for x in zero:
+            circuit.rx(pi, q[x])
+
+        # diffuser
+        for x in range(num):
+            circuit.ry(pi, q[x])
+
+        circuit.h(num - 1)
+        circuit.mct(list(range(num - 1)), num - 1)  # multi-controlled-toffoli
+        circuit.h(num - 1)
+
+        for x in range(num):
+            circuit.ry(pi, q[x])
+
+    return circuit
+
+
 if __name__ == '__main__':
 
     authentication = get_authentication()
     QI.set_authentication(authentication, QI_URL)
+    # qi_backend = QI.get_backend('Starmon-5')
     qi_backend = QI.get_backend('QX single-node simulator')
 
-    q = QuantumRegister(2)
-    c = ClassicalRegister(2)
+    q = QuantumRegister(5)
+    c = ClassicalRegister(5)
     circuit = QuantumCircuit(q, c)
 
-    circuit = alt_grover(circuit, search=1)
+    # circuit = alt_grover(circuit, search=1)
+    circuit = alt_grover_n(circuit, [True, True, True, True, False])
 
     circuit.measure(q, c)
 
