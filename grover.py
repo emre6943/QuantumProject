@@ -166,6 +166,7 @@ def plot_results(probabilities_histogram, size):
 
 
 def grover(qc, answer, bits):
+    #this r adds the sqrtN complexity
     r = math.floor(np.pi / 4 * math.sqrt((2 ** len(bits)) / len(answer)))
     if r == 0:
         r = 1
@@ -176,35 +177,60 @@ def grover(qc, answer, bits):
         qc.append(diffuser(len(bits)), bits)
     return qc
 
-# def answer_generator(n_bits, num_answers):
-#     arr = []
-#     for x in range(num_answers):
-#         arr.append()
+def cheap_grover(n_bits, answers, qi_backend):
+    limit = 2 ** n_bits / 2
+    if len(answers) >= limit:
+        answers = np.array_split(answers, 2)
+        print(answers)
+        for an in answers:
+            bits = all_bits(n_bits)
+
+            q = QuantumRegister(n_bits)
+            b = ClassicalRegister(n_bits)
+            circuit = QuantumCircuit(q, b)
+
+            # compexity is O(n)
+            circuit = initialize_s(circuit, bits)
+
+            circuit = grover(circuit, an, bits)
+
+            # compexity is O(n)
+            circuit.measure(q, b)
+
+            print(circuit.draw())
+
+            qi_job = execute(circuit, backend=qi_backend, shots=1024)
+            qi_result = qi_job.result()
+            probabilities_histogram = qi_result.get_probabilities(circuit)
+            plot_results(probabilities_histogram, [120, 20])
+    else:
+        bits = all_bits(n_bits)
+
+        q = QuantumRegister(n_bits)
+        b = ClassicalRegister(n_bits)
+        circuit = QuantumCircuit(q, b)
+
+        # compexity is O(n)
+        circuit = initialize_s(circuit, bits)
+
+        circuit = grover(circuit, answers, bits)
+
+        # compexity is O(n)
+        circuit.measure(q, b)
+
+        print(circuit.draw())
+
+        qi_job = execute(circuit, backend=qi_backend, shots=1024)
+        qi_result = qi_job.result()
+        probabilities_histogram = qi_result.get_probabilities(circuit)
+        plot_results(probabilities_histogram, [120, 20])
 
 if __name__ == '__main__':
 
     authentication = get_authentication()
     QI.set_authentication(authentication, QI_URL)
-    qi_backend = QI.get_backend('Starmon-5')
-    # qi_backend = QI.get_backend('QX single-node simulator')
+    # qi_backend = QI.get_backend('Starmon-5')
+    qi_backend = QI.get_backend('QX single-node simulator')
 
-    q_num = 5
-    bits = all_bits(q_num)
-
-    q = QuantumRegister(q_num)
-    b = ClassicalRegister(q_num)
-    circuit = QuantumCircuit(q, b)
-
-    circuit = initialize_s(circuit, bits)
-
-    circuit = grover(circuit, [[False, False, False, False, False]], bits)
-
-    circuit.measure(q, b)
-
-    print(circuit.draw())
-
-    qi_job = execute(circuit, backend=qi_backend, shots=1024)
-    qi_result = qi_job.result()
-    probabilities_histogram = qi_result.get_probabilities(circuit)
-    plot_results(probabilities_histogram, [120, 20])
+    cheap_grover(3, [[True, True, True], [True, True, False], [True, False, False], [False, False, False]], qi_backend)
 
