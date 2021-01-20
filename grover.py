@@ -225,6 +225,42 @@ def cheap_grover(n_bits, answers, qi_backend):
         probabilities_histogram = qi_result.get_probabilities(circuit)
         plot_results(probabilities_histogram, [120, 20])
 
+
+def sat_small(circuit, conditions):
+    # this r adds the sqrtN complexity
+    r = math.floor(np.pi / 4 * math.sqrt((2 ** len(bits)) / len(answer)))
+    if r == 0:
+        r = 1
+    print(str(r) + " iterations made")
+    for i in range(r):
+        for an in answer:
+            qc.append(oracle(an), bits)
+        qc.append(diffuser(len(bits)), bits)
+    return qc
+
+
+def sat(n_bits, conditions, qi_backend):
+    bits = all_bits(n_bits)
+
+    q = QuantumRegister(n_bits)
+    b = ClassicalRegister(n_bits)
+    circuit = QuantumCircuit(q, b)
+
+    # compexity is O(n)
+    circuit = initialize_s(circuit, bits)
+
+    circuit = sat_small(circuit, conditions)
+
+    # compexity is O(n)
+    circuit.measure(q, b)
+
+    print(circuit.draw())
+
+    qi_job = execute(circuit, backend=qi_backend, shots=1024)
+    qi_result = qi_job.result()
+    probabilities_histogram = qi_result.get_probabilities(circuit)
+    plot_results(probabilities_histogram, [120, 20])
+
 if __name__ == '__main__':
 
     authentication = get_authentication()
@@ -232,5 +268,5 @@ if __name__ == '__main__':
     # qi_backend = QI.get_backend('Starmon-5')
     qi_backend = QI.get_backend('QX single-node simulator')
 
-    cheap_grover(3, [[True, True, True], [True, True, False], [True, False, False], [False, False, False]], qi_backend)
+    # cheap_grover(3, [[True, True, True], [True, True, False], [True, False, False], [False, False, False]], qi_backend)
 
