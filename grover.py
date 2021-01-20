@@ -14,6 +14,7 @@ QI_EMAIL = os.getenv('QI_EMAIL')
 QI_PASSWORD = os.getenv('QI_PASSWORD')
 QI_URL = os.getenv('API_URL', 'https://api.quantum-inspire.com/')
 
+# Just creates an array from 0 to num of qubits - 1
 def all_bits(q_num):
     arr = []
     for x in range(q_num):
@@ -34,46 +35,6 @@ def get_authentication():
         else:
             email, password = QI_EMAIL, QI_PASSWORD
         return get_basic_authentication(email, password)
-
-# modular ccz good for 4 - 6 qubits
-def connecter(qc, n):
-    angle = np.pi / 16
-    qc.rz(angle, 0)
-
-    qc.cx(0, 1)
-    qc.rz(-angle, 1)
-    qc.cx(0, 1)
-    qc.rz(angle, 1)
-
-    i = 2
-    while i < n:
-        for x in range(2):
-            p = i - 1
-            while p != 0:
-                qc.cx(p, i)
-                qc.rz(-angle, i)
-                qc.cx(0, i)
-                qc.rz(angle, i)
-                p = p - 1
-        i = i + 1
-
-    return qc
-
-# used for 3 qubits
-def ccz(qc, a, b, c):
-    qc.cx(b, c)
-    qc.tdg(c)
-    qc.cx(a, c)
-    qc.t(c)
-    qc.cx(b, c)
-    qc.tdg(c)
-    qc.cx(a, c)
-    qc.t([b, c])
-    qc.cx(a, b)
-    qc.t(a)
-    qc.tdg(b)
-    qc.cx(a, b)
-    return qc
 
 def initialize_s(qc, qubits):
     """Apply a H-gate to 'qubits' in qc"""
@@ -107,10 +68,7 @@ def oracle(answer):
     # Connectors
     if num == 2:
         qc.cz(0, 1)
-    elif num == 3:
-        qc = ccz(qc, 0, 1, 2)
     else:
-        # qc = connecter(qc, num)
         qc.h(num - 1)
         qc.mct(list(range(num - 1)), num - 1)  # multi-controlled-toffoli
         qc.h(num - 1)
@@ -121,32 +79,35 @@ def oracle(answer):
 
     gate = qc.to_gate()
     gate.name = "Oracle"
+    print("Oracle")
     print(qc.draw())
 
     return gate
 
 
 def diffuser(nqubits):
+    # IBM tutorial helped
     qc = QuantumCircuit(nqubits)
-    # Apply transformation |s> -> |00..0> (H-gates)
+    # H all
     for qubit in range(nqubits):
         qc.h(qubit)
-    # Apply transformation |00..0> -> |11..1> (X-gates)
+    # Not all
     for qubit in range(nqubits):
         qc.x(qubit)
     # Do multi-controlled-Z gate
     qc.h(nqubits-1)
     qc.mct(list(range(nqubits-1)), nqubits-1)  # multi-controlled-toffoli
     qc.h(nqubits-1)
-    # Apply transformation |11..1> -> |00..0>
+    # Not all
     for qubit in range(nqubits):
         qc.x(qubit)
-    # Apply transformation |00..0> -> |s>
+    # H all
     for qubit in range(nqubits):
         qc.h(qubit)
-    # We will return the diffuser as a gate
+
     gate = qc.to_gate()
     gate.name = "Diffuser"
+    print("The Diffuser")
     print(qc.draw())
     return gate
 
@@ -181,7 +142,6 @@ def cheap_grover(n_bits, answers, qi_backend):
     limit = 2 ** n_bits / 2
     if len(answers) >= limit:
         answers = np.array_split(answers, 2)
-        print(answers)
         for an in answers:
             bits = all_bits(n_bits)
 
@@ -229,8 +189,9 @@ if __name__ == '__main__':
 
     authentication = get_authentication()
     QI.set_authentication(authentication, QI_URL)
-    # qi_backend = QI.get_backend('Starmon-5')
+
     qi_backend = QI.get_backend('QX single-node simulator')
 
+    # An example for how to search for multiple elements
     cheap_grover(3, [[True, True, True], [True, True, False], [True, False, False], [False, False, False]], qi_backend)
 
