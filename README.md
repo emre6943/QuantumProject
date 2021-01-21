@@ -1,4 +1,10 @@
-# QuantumProject
+# Quantum Engineering Group Project: Grover's Algorithm
 
-Quantum inspire is needed to run.
-By just pulling the project in some of our members the code didn't work, so if you come across the same problem please just install quantuminspire and qiskit like it is showed in this video https://youtu.be/RIPfGD6hBAM. Then you can run the .py files.
+In this repository, you can find the code we used to run Grover's algorithm on physical backends using Quantum Inspire by QuTech. 
+
+Note that to run these files, `quantuminspire` and `qiskit` need to be installed. (See https://youtu.be/RIPfGD6hBAM for more details on the installation process.)
+
+The repository contains these files:
+* `grover.py` - implementation of Grover's algorithm for any number of qubits and search elements
+* `watson.py` - implementation of Grover's algorithm inspired by Watson et al. (2018) for 2 qubits and 1 search element
+* TODO: add file on sudoku.
