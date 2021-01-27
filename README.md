@@ -7,4 +7,4 @@ Note that to run these files, `quantuminspire` and `qiskit` need to be installed
 The repository contains these files:
 * `grover.py` - implementation of Grover's algorithm for any number of qubits and search elements
 * `watson.py` - implementation of Grover's algorithm inspired by Watson et al. (2018) for 2 qubits and 1 search element
-* TODO: add file on sudoku.
+* `sudoku.py` - methods for solving 1x4 Sudoku and 4x4 Sudoku (4x4 is not fully tested yet)
