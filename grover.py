@@ -14,12 +14,14 @@ QI_EMAIL = os.getenv('QI_EMAIL')
 QI_PASSWORD = os.getenv('QI_PASSWORD')
 QI_URL = os.getenv('API_URL', 'https://api.quantum-inspire.com/')
 
+
 # Just creates an array from 0 to num of qubits - 1
 def all_bits(q_num):
     arr = []
     for x in range(q_num):
         arr.append(x)
     return arr
+
 
 def get_authentication():
     """ Gets the authentication for connecting to the Quantum Inspire API."""
@@ -36,16 +38,17 @@ def get_authentication():
             email, password = QI_EMAIL, QI_PASSWORD
         return get_basic_authentication(email, password)
 
+
 def initialize_s(qc, qubits):
-    """Apply a H-gate to 'qubits' in qc"""
+    """Apply a H-gate to qubits in quantum circuit qc."""
     for q in qubits:
         qc.h(q)
     return qc
 
+
 def oracle(answer):
     """
     Creates the oracle depending on the output wanted
-    :param qc: quantum circuit
     :param answer: the wanted element
     :return: quantum circuit
     """
@@ -86,6 +89,7 @@ def oracle(answer):
 
 
 def diffuser(nqubits):
+    """Creates a diffuser for a specific number of qubits."""
     # IBM tutorial helped
     qc = QuantumCircuit(nqubits)
     # H all
@@ -111,7 +115,9 @@ def diffuser(nqubits):
     print(qc.draw())
     return gate
 
+
 def plot_results(probabilities_histogram, size):
+    """Plot the results with states on x-axis and their probabilities on y-axis."""
     names = []
     values = []
 
@@ -138,9 +144,12 @@ def grover(qc, answer, bits):
         qc.append(diffuser(len(bits)), bits)
     return qc
 
+
 def cheap_grover(n_bits, answers, qi_backend):
+    """This algorithm checks whether the number of search elements isn't over the limit of what one circuit can find.
+    If this is true, the circuit is split into two. """
     limit = 2 ** n_bits / 2
-    if len(answers) >= limit:
+    if len(answers) >= limit:  # the circuit has to be split up
         answers = np.array_split(answers, 2)
         for an in answers:
             bits = all_bits(n_bits)
@@ -163,7 +172,7 @@ def cheap_grover(n_bits, answers, qi_backend):
             qi_result = qi_job.result()
             probabilities_histogram = qi_result.get_probabilities(circuit)
             plot_results(probabilities_histogram, [120, 20])
-    else:
+    else:  # we can execute the algorithm with one circuit
         bits = all_bits(n_bits)
 
         q = QuantumRegister(n_bits)
@@ -185,13 +194,14 @@ def cheap_grover(n_bits, answers, qi_backend):
         probabilities_histogram = qi_result.get_probabilities(circuit)
         plot_results(probabilities_histogram, [120, 20])
 
+
 if __name__ == '__main__':
 
     authentication = get_authentication()
     QI.set_authentication(authentication, QI_URL)
 
+    # this is where you choose the backend, the options are: Starmon-5, Spin-2, or QX single-node simulator
     qi_backend = QI.get_backend('QX single-node simulator')
 
     # An example for how to search for multiple elements
     cheap_grover(3, [[True, True, True], [True, True, False], [True, False, False], [False, False, False]], qi_backend)
-
